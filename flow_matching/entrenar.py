@@ -1,0 +1,46 @@
+"""ENTRENAR: configura el experimento, entrena y guarda un checkpoint."""
+import os
+import torch
+
+from data import make_dataset
+from model import VelocityNetConvolutional
+from train import train
+
+# ---- Configuración ----
+N_SAMPLES = 2000      # funciones de entrenamiento
+N_POINTS = 128        # puntos por función
+HIDDEN = 64
+N_LAYERS = 12
+KERNEL_SIZE = 15
+PADDING_MODE = "circular"
+EPOCHS = 1000
+SEED = 0
+DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+CHECKPOINT_PATH = "results/model.pt"
+
+torch.manual_seed(SEED)
+
+# ---- 1. Datos y modelo ----
+data = make_dataset(N_SAMPLES, N_POINTS).to(DEVICE)
+model = VelocityNetConvolutional(
+    dim=N_POINTS, hidden=HIDDEN, n_layers=N_LAYERS,
+    kernel_size=KERNEL_SIZE, padding_mode=PADDING_MODE,
+).to(DEVICE)
+
+# ---- 2. Entrenar ----
+train(model, data, epochs=EPOCHS)
+
+# ---- 3. Guardar checkpoint: pesos + todo lo necesario para reconstruir modelo y datos ----
+os.makedirs(os.path.dirname(CHECKPOINT_PATH), exist_ok=True)
+torch.save({
+    "model_state": model.state_dict(),
+    "model_args": dict(
+        dim=N_POINTS, hidden=HIDDEN, n_layers=N_LAYERS,
+        kernel_size=KERNEL_SIZE, padding_mode=PADDING_MODE,
+    ),
+    "data_args": dict(n_samples=N_SAMPLES, n_points=N_POINTS, seed=SEED),
+}, CHECKPOINT_PATH)
+
+n_params = sum(p.numel() for p in model.parameters())
+print(f"Checkpoint guardado en {CHECKPOINT_PATH}")
+print(f"Número de parámetros entrenados: {n_params}")
