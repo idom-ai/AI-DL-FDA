@@ -2,14 +2,14 @@
 import matplotlib.pyplot as plt
 import torch
 
-from calidad import plot_calidad
-from data import make_dataset
-from flow_matching import generate
-from model import VelocityNetConvolutional
-from visualize import plot_evolucion, plot_originales
+from flow_matching.quality import plot_calidad
+from flow_matching.data import make_sinusoids
+from flow_matching.flow_matching import generate
+from flow_matching.models import VelocityNetConvolutional
+from flow_matching.visualize import plot_evolucion, plot_originals
 
 # ---- Configuración ----
-CHECKPOINT_PATH = "results/model.pt"
+CHECKPOINT_PATH = "convolutional_1000_epochs.pt"
 N_GENERATE = 5     # funciones a generar para evaluar
 ODE_STEPS = 1000      # pasos de integración (debe ser múltiplo de 5 para las gráficas)
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -22,7 +22,7 @@ model.eval()
 
 # ---- 2. Reconstruir los datos reales (misma semilla que en el entrenamiento, para comparar) ----
 torch.manual_seed(ckpt["data_args"]["seed"])
-data = make_dataset(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_points"])
+data = make_sinusoids(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_points"])
 
 # ---- 3. Generar funciones nuevas (devuelve toda la trayectoria: del ruido a las funciones) ----
 trayectoria = generate(model, N_GENERATE, ckpt["data_args"]["n_points"], steps=ODE_STEPS, device=DEVICE)
@@ -34,7 +34,7 @@ print(f"MSE de constancia de lo generado: {mse:.6f}")
 print(f"Número de parámetros del modelo: {sum(p.numel() for p in model.parameters())}")
 
 # ---- 5. Gráficas ----
-plot_originales(data)
+plot_originals(data)
 plot_evolucion(trayectoria)
 plot_calidad(data, funciones)
 plt.show()

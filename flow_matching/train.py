@@ -1,7 +1,6 @@
-"""BLOQUE 4: entrenamiento. Solo entrena; devuelve las pérdidas y no dibuja nada."""
+"""BLOCK 4: training. It only trains and returns losses."""
 import torch
-
-from flow_matching import cfm_loss
+from flow_matching.flow_matching import cfm_loss
 
 def train(model, data, epochs=3000, batch_size=128, lr=1e-4):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, eps=1e-5)
@@ -9,7 +8,7 @@ def train(model, data, epochs=3000, batch_size=128, lr=1e-4):
     losses = []
 
     for epoch in range(epochs):
-        order = torch.randperm(len(data), device='mps')           # barajar los datos en cada época
+        order = torch.randperm(len(data), device='mps')           
         total = 0.0
         for i in range(0, len(data), batch_size):
             batch = data[order[i:i + batch_size]]
@@ -20,6 +19,5 @@ def train(model, data, epochs=3000, batch_size=128, lr=1e-4):
             total += loss.item()
         losses.append(total / n_batches)
         if epoch % 100 == 0:
-            print(f"época {epoch:4d}  pérdida {losses[-1]:.4f}")
-
+            print(f"epoch {epoch:4d}  loss {losses[-1]:.4f}")
     return losses

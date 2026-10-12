@@ -1,20 +1,21 @@
-"""BLOQUE 5: visualización. Solo dibuja; no calcula nada del modelo."""
+"""BLOCK 5: visualization. Plots, no calculations."""
 import matplotlib.pyplot as plt
 
-def plot_originales(data, n=15):
-    """Las funciones constantes reales con las que se entrena."""
+def plot_originals(data, n=15):
+    """Plots the training functions. """
     plt.figure(figsize=(6, 4))
     for f in data[:n]:
         plt.plot(f)
     plt.ylim(-3, 3)
-    plt.title("Funciones constantes originales")
-    plt.xlabel("punto de la función")
+    plt.title("Training functions.")
+    plt.xlabel("number of function point")
     plt.tight_layout()
-    plt.savefig("originales.png", dpi=150)
+    plt.savefig("originals.png", dpi=150)
 
 
 def plot_evolucion(trayectoria, n=10, paneles=6):
-    """Cómo el ruido se va convirtiendo en funciones constantes durante la generación.
+    """
+    Noise evolution turining into functions.
 
     Cada panel es un instante τ de la ODE; cada color es la misma muestra a lo largo del tiempo.
     """
