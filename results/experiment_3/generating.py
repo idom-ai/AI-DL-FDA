@@ -5,7 +5,7 @@ import torch
 from flow_matching.quality import plot_calidad
 from flow_matching.data import make_sinusoids
 from flow_matching.flow_matching import generate
-from flow_matching.models import VelocityNetConvolutional
+from models.architectures import VelocityNetConvolutional
 from flow_matching.visualize import plot_evolucion, plot_originals
 
 # ---- Configuración ----

@@ -5,7 +5,7 @@ import torch
 from flow_matching.quality import plot_calidad
 from flow_matching.data import make_constants
 from flow_matching.flow_matching import generate
-from flow_matching.models import VelocityNetPooling
+from models.architectures import VelocityNetPooling
 from flow_matching.visualize import plot_evolucion, plot_originals
 
 # ---- Configuración ----

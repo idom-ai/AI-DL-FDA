@@ -3,7 +3,7 @@ import os
 import torch
 
 from flow_matching.data import make_constants
-from flow_matching.models import VelocityNet
+from models.architectures import VelocityNet
 from flow_matching.train import train
 
 # ---- Configuración ----
