@@ -3,7 +3,7 @@ import os
 import torch
 
 from flow_matching.data import make_sinusoids
-from models.architectures import VelocityNetConvolutional
+from models.architectures import FirstVelocityNetConvolutional
 from flow_matching.train import train
 
 # ---- Configuración ----
@@ -22,8 +22,8 @@ torch.manual_seed(SEED)
 
 # ---- 1. Datos y modelo ----
 data = make_sinusoids(N_SAMPLES, N_POINTS).to(DEVICE)
-model = VelocityNetConvolutional(
-    dim=N_POINTS, hidden=HIDDEN, n_layers=N_LAYERS,
+model = FirstVelocityNetConvolutional(
+    dim=N_POINTS, channels=HIDDEN, n_layers=N_LAYERS,
     kernel_size=KERNEL_SIZE, padding_mode=PADDING_MODE,
 ).to(DEVICE)
 
