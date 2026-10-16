@@ -3,14 +3,14 @@ import os
 import torch
 
 from flow_matching.data import make_sinusoids
-from models.architectures import SongsUNet1D
+from models.unet_adaptation import SongsUNet1D
 from flow_matching.train import train
 
 # ---- Configuración ----
 N_SAMPLES = 2000
-N_POINTS = 128                      # debe ser múltiplo de 8 (si no, la red rellena y recorta sola)
+N_POINTS = 2*128                      # debe ser múltiplo de 8 (si no, la red rellena y recorta sola)
 CHANNELS = (32, 64, 128, 256)
-EMBED_DIM = 256
+EMBED_DIM = 2048
 FOURIER_SCALE = 30.0
 EPOCHS = 1000
 SEED = 0

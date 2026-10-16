@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import torch
 
 from flow_matching.quality import plot_calidad
-from flow_matching.data import make_constants
+from flow_matching.data import make_sinusoids
 from flow_matching.flow_matching import generate
-from models.architectures import SongsUNet1D
+from models.unet_adaptation import SongsUNet1D
 from flow_matching.visualize import plot_evolucion, plot_originals
 
 # ---- Configuración ----
@@ -22,7 +22,7 @@ model.eval()
 
 # ---- 2. Reconstruir los datos reales (misma semilla que en el entrenamiento, para comparar) ----
 torch.manual_seed(ckpt["data_args"]["seed"])
-data = make_constants(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_points"])
+data = make_sinusoids(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_points"])
 
 # ---- 3. Generar funciones nuevas (devuelve toda la trayectoria: del ruido a las funciones) ----
 with torch.no_grad():
