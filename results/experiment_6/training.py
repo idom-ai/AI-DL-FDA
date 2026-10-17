@@ -3,7 +3,7 @@ import os
 import torch
 
 from flow_matching.data import make_sinusoids
-from models.architectures import SecondVelocityNetConvolutional
+from models.convolutionals import SecondVelocityNetConvolutional
 from flow_matching.train import train
 
 # ---- Configuración ----

@@ -149,7 +149,7 @@ class ThirdVelocityNetConvolutional(nn.Module):
       Flatten         [B, dim]
     """
 
-    def __init__(self, dim, channels=[4, 8, 16], embed_dim=64, kernel_size=13):
+    def __init__(self, dim, channels=[16, 32, 64], embed_dim=64, kernel_size=13):
 
         super().__init__()
 
@@ -166,18 +166,27 @@ class ThirdVelocityNetConvolutional(nn.Module):
         self.act = nn.SiLU()
 
         # encoder 
-        self.conv1 = nn.Conv1d(1, channels[0], kernel_size, padding=padding)
+        self.conv1 = nn.Conv1d(1, channels[0], kernel_size, padding=padding, bias=False)
         self.dense1 = Dense(embed_dim, channels[0])
-        self.conv2 = nn.Conv1d(channels[0], channels[1], kernel_size, padding=padding) 
+        self.gnorm1 = nn.GroupNorm(2, channels[0])
+
+        self.conv2 = nn.Conv1d(channels[0], channels[1], kernel_size, padding=padding, bias=False) 
         self.dense2 = Dense(embed_dim, channels[1])
-        self.conv3 = nn.Conv1d(channels[1], channels[2], kernel_size, padding=padding)
+        self.gnorm2 = nn.GroupNorm(4, channels[1])
+
+        self.conv3 = nn.Conv1d(channels[1], channels[2], kernel_size, padding=padding, bias=False)
         self.dense3 = Dense(embed_dim, channels[2])
+        self.gnorm3 = nn.GroupNorm(4, channels[2])
 
         # decoder 
-        self.tconv3 = nn.ConvTranspose1d(channels[2], channels[1], kernel_size, padding=padding)
+        self.tconv3 = nn.ConvTranspose1d(channels[2], channels[1], kernel_size, padding=padding, bias=False)
         self.dense4 = Dense(embed_dim, channels[1])
-        self.tconv2 = nn.ConvTranspose1d(channels[1] + channels[1], channels[0], kernel_size, padding=padding)
+        self.tgnorm2 = nn.GroupNorm(4, channels[1])
+
+        self.tconv2 = nn.ConvTranspose1d(channels[1] + channels[1], channels[0], kernel_size, padding=padding, bias=False)
         self.dense5 = Dense(embed_dim, channels[0])
+        self.tgnorm1 = nn.GroupNorm(2, channels[0])
+
         self.tconv1 = nn.Conv1d(channels[0] + channels[0], 1, kernel_size, padding=padding) 
 
 
@@ -202,12 +211,12 @@ class ThirdVelocityNetConvolutional(nn.Module):
 
         # encoder 
         #           conv(x(t, tau))  + embedding(tau)
-        h1 = self.act( self.conv1(x) + self.dense1(embed))
-        h2 = self.act(self.conv2(h1) + self.dense2(embed))
-        h3 = self.act(self.conv3(h2) + self.dense3(embed))
+        h1 = self.act(self.gnorm1( self.conv1(x) + self.dense1(embed)))
+        h2 = self.act(self.gnorm2(self.conv2(h1) + self.dense2(embed)))
+        h3 = self.act(self.gnorm3(self.conv3(h2) + self.dense3(embed)))
 
-        h = self.act(self.tconv3(h3) + self.dense4(embed))
-        h = self.act(self.tconv2(torch.cat([h, h2], dim=1))  + self.dense5(embed))
+        h = self.act(self.tgnorm2(self.tconv3(h3) + self.dense4(embed)))
+        h = self.act(self.tgnorm1(self.tconv2(torch.cat([h, h2], dim=1))  + self.dense5(embed)))
         h = self.tconv1(torch.cat([h, h1], dim=1))
 
         h = h[..., :L]                              # remove the padding

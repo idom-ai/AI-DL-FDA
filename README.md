@@ -11,3 +11,15 @@ The `flow_matching` directory is now configured as a local Python module. After 
     cd results/experiment_3
     uv run python generating.py
 
+
+Experiments: 
+
+1. First approach with a 2 hidden-fully-connected layers. 
+2. Adding pooling layers to the previous architecture. 
+3. First implementation of a 1D convolutional net. 
+4. Songs U-Net with 1D convolutions.
+5. Songs U-Net with kernel size as a parameter. 
+6. Convolutional net with a Fourier Projection time embedding added on each step. 
+7. Adding skip connections to the previous Net. 
+8. Adding group norm to the previous Net. 
+

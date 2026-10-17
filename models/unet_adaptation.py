@@ -80,12 +80,15 @@ class SongsUNet1D(nn.Module):
         self.tconv4 = nn.ConvTranspose1d(channels[3], channels[2], kernel_size, stride=2, padding=self.padding, output_padding=1, bias=False)
         self.dense5 = Dense(embed_dim, channels[2])
         self.tgnorm4 = nn.GroupNorm(32, channels[2])
+
         self.tconv3 = nn.ConvTranspose1d(channels[2] + channels[2], channels[1], kernel_size, stride=2, padding=self.padding, output_padding=1, bias=False)
         self.dense6 = Dense(embed_dim, channels[1])
         self.tgnorm3 = nn.GroupNorm(32, channels[1])
+
         self.tconv2 = nn.ConvTranspose1d(channels[1] + channels[1], channels[0], kernel_size, stride=2, padding=self.padding, output_padding=1, bias=False)
         self.dense7 = Dense(embed_dim, channels[0])
         self.tgnorm2 = nn.GroupNorm(32, channels[0])
+        
         self.tconv1 = nn.Conv1d(channels[0] + channels[0], in_channels, kernel_size, stride=1, padding=self.padding)
 
         self.act = nn.SiLU()
