@@ -13,11 +13,11 @@ class GaussianFourierProjection(nn.Module):
     """
     def __init__(self, embed_dim, scale=30.0):
         super().__init__()
-        self.W = nn.Parameter(torch.randn(embed_dim // 2) * scale, requires_grad=False)
+        self.W = nn.Parameter(torch.randn(embed_dim // 2) * scale, requires_grad=False) # w -> embed_dim // 2
 
     def forward(self, t):
-        t_proj = t[:, None] * self.W[None, :] * 2 * math.pi
-        return torch.cat([torch.sin(t_proj), torch.cos(t_proj)], dim=-1)
+        t_proj = t[:, None] * self.W[None, :] * 2 * math.pi # t_proj -> (B, embed_dim // 2)
+        return torch.cat([torch.sin(t_proj), torch.cos(t_proj)], dim=-1) # (B, embed_dim)
 
 class Dense(nn.Module):
     """
@@ -34,12 +34,12 @@ class Dense(nn.Module):
     This projection is also learnable.
     
     """
-    def __init__(self, input_dim, output_dim,):
+    def __init__(self, input_dim, output_dim,): # input_dim=embed_dim
         super().__init__()
         self.dense = nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        return self.dense(x)[..., None]
+        return self.dense(x)[..., None] # (B, C = output_dim, p)
 
 
 class SongsUNet1D(nn.Module):
@@ -56,8 +56,8 @@ class SongsUNet1D(nn.Module):
         super().__init__()
 
         self.embed = nn.Sequential(
-            GaussianFourierProjection(embed_dim, scale=fourier_scale),
-            nn.Linear(embed_dim, embed_dim),
+            GaussianFourierProjection(embed_dim, scale=fourier_scale), # (B, embed_dim)
+            nn.Linear(embed_dim, embed_dim), # (B, embed_dim)
         )
 
         self.padding = (kernel_size - 1) // 2
@@ -66,12 +66,15 @@ class SongsUNet1D(nn.Module):
         self.conv1 = nn.Conv1d(in_channels, channels[0], kernel_size, stride=1, padding=self.padding, bias=False)
         self.dense1 = Dense(embed_dim, channels[0])
         self.gnorm1 = nn.GroupNorm(4, channels[0])
+
         self.conv2 = nn.Conv1d(channels[0], channels[1], kernel_size, stride=2, padding=self.padding, bias=False)
         self.dense2 = Dense(embed_dim, channels[1])
         self.gnorm2 = nn.GroupNorm(32, channels[1])
+
         self.conv3 = nn.Conv1d(channels[1], channels[2], kernel_size, stride=2, padding=self.padding, bias=False)
         self.dense3 = Dense(embed_dim, channels[2])
         self.gnorm3 = nn.GroupNorm(32, channels[2])
+        
         self.conv4 = nn.Conv1d(channels[2], channels[3], kernel_size, stride=2, padding=self.padding, bias=False)
         self.dense4 = Dense(embed_dim, channels[3])
         self.gnorm4 = nn.GroupNorm(32, channels[3])
@@ -108,7 +111,7 @@ class SongsUNet1D(nn.Module):
         if pad:
             x = F.pad(x, (0, pad), mode="replicate")
 
-        embed = self.act(self.embed(t))
+        embed = self.act(self.embed(t)) # (B, embed_dim)
 
         # Encoder
         # the encoder is responsible of:

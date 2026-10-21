@@ -13,7 +13,7 @@ def plot_originals(data, n=15):
     plt.savefig("originals.png", dpi=150)
 
 
-def plot_evolucion(trayectoria, n=10, paneles=6):
+def plot_evolucion(trayectoria, n=30, paneles=6):
     """
     Noise evolution turining into functions.
 

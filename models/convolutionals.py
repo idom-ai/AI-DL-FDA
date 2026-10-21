@@ -216,7 +216,7 @@ class ThirdVelocityNetConvolutional(nn.Module):
         h3 = self.act(self.gnorm3(self.conv3(h2) + self.dense3(embed)))
 
         h = self.act(self.tgnorm2(self.tconv3(h3) + self.dense4(embed)))
-        h = self.act(self.tgnorm1(self.tconv2(torch.cat([h, h2], dim=1))  + self.dense5(embed)))
+        h = self.act(self.tgnorm1(self.tconv2(torch.cat([h, h2], dim=1)) + self.dense5(embed)))
         h = self.tconv1(torch.cat([h, h1], dim=1))
 
         h = h[..., :L]                              # remove the padding
