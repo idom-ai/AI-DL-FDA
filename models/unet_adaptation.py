@@ -39,7 +39,7 @@ class Dense(nn.Module):
         self.dense = nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        return self.dense(x)[..., None] # (B, C = output_dim, p)
+        return self.dense(x)[..., None] # (B, C = output_dim, 1)
 
 
 class SongsUNet1D(nn.Module):

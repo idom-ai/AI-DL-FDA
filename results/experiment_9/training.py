@@ -7,7 +7,7 @@ from models.unet_adaptation import SongsUNet1D
 from flow_matching.train import train
 
 # ---- Configuración ----
-N_SAMPLES = 2000
+N_SAMPLES = 100
 N_POINTS = 1024                      # debe ser múltiplo de 8 (si no, la red rellena y recorta sola)
 CHANNELS = (32, 64, 128, 256)
 EMBED_DIM = 2048
