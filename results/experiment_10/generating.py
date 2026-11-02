@@ -1,42 +1,41 @@
-"""GENERAR: carga un checkpoint ya entrenado y produce funciones, gráficas y métricas."""
+"""GENERATION: loads a trained checkpoint and produces functions, plots and metrics."""
 import matplotlib.pyplot as plt
 import torch
 
-from flow_matching.quality import plot_calidad
-from flow_matching.data import make_sinusoids
-from flow_matching.flow_matching import generate
+from flow_matching_fda.data import make_sinusoids
+from flow_matching_fda.flow_matching import functions_at, generate
+from flow_matching_fda.quality import constancy_mse, plot_quality
+from flow_matching_fda.visualize import plot_evolution, plot_originals
 from models.unet_adaptation import SongsUNet1D
-from flow_matching.visualize import plot_evolucion, plot_originals
 
-# ---- Configuración ----
-CHECKPOINT_PATH = "unet1d_100_epochs.pt"
-N_GENERATE = 30       # funciones a generar para evaluar
-ODE_STEPS = 1000      # pasos de integración (debe ser múltiplo de 5 para las gráficas)
+# ---- Configuration ----
+CHECKPOINT_PATH = "unet1d_1000_epochs_kernel_13.pt"
+N_GENERATE = 50       # functions to generate for the evaluation
+ODE_STEPS = 1000      # integration steps of the ODE
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
 
-# ---- 1. Cargar checkpoint y reconstruir el modelo ----
+# ---- 1. Load checkpoint and rebuild the model ----
 ckpt = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
 model = SongsUNet1D(**ckpt["model_args"]).to(DEVICE)
 model.load_state_dict(ckpt["model_state"])
 model.eval()
 
-# ---- 2. Reconstruir los datos reales (misma semilla que en el entrenamiento, para comparar) ----
-torch.manual_seed(ckpt["data_args"]["seed"])
-data = make_sinusoids(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_points"])
+# ---- 2. Rebuild the real data (same seed as in training, to compare) ----
+args = ckpt["data_args"]
+data = make_sinusoids(args["n_samples"], args["n_points"], random_state=args["seed"])
 
-# ---- 3. Generar funciones nuevas (devuelve toda la trayectoria: del ruido a las funciones) ----
-with torch.no_grad():
-    trayectoria = generate(model, N_GENERATE, ckpt["data_args"]["n_points"], steps=ODE_STEPS, device=DEVICE)
-funciones = trayectoria[-1]
+# ---- 3. Generate new functions on the same grid t (the whole trajectory: from noise to functions) ----
+trajectory = generate(model, N_GENERATE, data.grid_points[0], steps=ODE_STEPS)   # FDataGrid of surfaces x(tau, t)
+generated = functions_at(trajectory, -1)                                          # FDataGrid of functions x(t) at tau = 1
 
-# ---- 4. Métricas ----
-mse = funciones.var(dim=1, unbiased=False).mean().item()   # 0 = perfectamente constantes
+# ---- 4. Metrics ----
+mse = constancy_mse(generated).mean()      # 0 = perfectly constant
 n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-print(f"MSE de constancia de lo generado: {mse:.6f}")
-print(f"Número de parámetros del modelo: {n_params}")
+print(f"Constancy MSE of the generated functions: {mse:.6f}")
+print(f"Number of parameters of the model: {n_params}")
 
-# ---- 5. Gráficas ----
+# ---- 5. Plots ----
 plot_originals(data)
-plot_evolucion(trayectoria)
-plot_calidad(data, funciones)
+plot_evolution(trajectory)
+plot_quality(data, generated)
 plt.show()
