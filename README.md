@@ -22,4 +22,6 @@ Experiments:
 6. Convolutional net with a Fourier Projection time embedding added on each step. 
 7. Adding skip connections to the previous Net. 
 8. Adding group norm to the previous Net. 
-
+9. Showing how granularity can make models with same kernel sizes stop learning. 
+10. Experiment 10 with `flow_matching_fda`, the `flow_matching` module rewritten on scikit-fda: data as `FDataGrid`, ODE integrated with `skfda.datasets.make_sde_trajectories` (zero diffusion) and metrics computed with scikit-fda integrals and L2 norms. Also searching of the optimal k with granularity 256. 
+11. Upgrading the kernel size for higher granularities, in order to stablish the optimal relation between them.
