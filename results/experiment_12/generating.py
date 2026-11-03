@@ -9,8 +9,8 @@ from flow_matching_fda.visualize import plot_evolution, plot_originals
 from models.convolutionals import PropuestaPersonal
 
 # ---- Configuration ----
-CHECKPOINT_PATH = "propuesta_1000_epochs.pt"
-N_GENERATE = 50       # functions to generate for the evaluation
+CHECKPOINT_PATH = "propuesta_10000_epochs.pt"
+N_GENERATE = 15       # functions to generate for the evaluation
 ODE_STEPS = 1000      # integration steps of the ODE
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
 

@@ -222,3 +222,121 @@ class ThirdVelocityNetConvolutional(nn.Module):
         h = h[..., :L]                              # remove the padding
 
         return h.squeeze(1) if squeeze else h
+
+class PropuestaPersonal(nn.Module):
+
+    def __init__(self, channels=[2, 4, 8, 16, 32, 64], embed_dim=64, kernel_size=13, fourier_scale = 30.0):
+
+        super().__init__()
+
+        assert kernel_size % 2 == 1, "kernel_size must be odd"
+
+        padding = kernel_size // 2
+
+        # now we have a time embedding
+        self.embed = nn.Sequential(
+            GaussianFourierProjection(embed_dim, scale=fourier_scale), 
+            nn.Linear(embed_dim, embed_dim)
+        )
+
+        self.act = nn.SiLU()
+
+        # encoder 
+        # h1
+        self.conv1 = nn.Conv1d(1, channels[0], kernel_size, padding=padding, bias=False)
+        self.dense1 = Dense(embed_dim, channels[0])
+        self.gnorm1 = nn.GroupNorm(2, channels[0])
+
+        # h2
+        self.conv2 = nn.Conv1d(channels[0], channels[1], kernel_size, stride=2, padding=padding, bias=False)
+        self.dense2 = Dense(embed_dim, channels[1])
+        self.gnorm2 = nn.GroupNorm(4, channels[1])
+
+        # h3 
+        self.conv3 = nn.Conv1d(channels[1], channels[2], kernel_size, stride=2, padding=padding, bias=False)
+        self.dense3 = Dense(embed_dim, channels[2])
+        self.gnorm3 = nn.GroupNorm(4, channels[2])
+
+        # h4
+        self.conv4 = nn.Conv1d(channels[2], channels[3], kernel_size, stride=2, padding=padding, bias=False)
+        self.dense4 = Dense(embed_dim, channels[3])
+        self.gnorm4 = nn.GroupNorm(4, channels[3])
+
+        # h5 
+        self.conv5 = nn.Conv1d(channels[3], channels[4], kernel_size, stride=2, padding=padding, bias=False)
+        self.dense5 = Dense(embed_dim, channels[4])
+        self.gnorm5 = nn.GroupNorm(4, channels[4])
+
+        # h6
+        self.conv6 = nn.Conv1d(channels[4], channels[5], kernel_size, stride=2, padding=padding, bias=False)
+        self.dense6 = Dense(embed_dim, channels[5])
+        self.gnorm6 = nn.GroupNorm(4, channels[5])
+
+        # decoder 
+
+        # tconv6
+        self.tconv6 = nn.ConvTranspose1d(channels[5], channels[4], kernel_size, stride=2, padding=padding, output_padding=1, bias=False)
+        self.dense7 = Dense(embed_dim, channels[4])
+        self.tgnorm5 = nn.GroupNorm(4, channels[4])
+
+        # tconv5
+        self.tconv5 = nn.ConvTranspose1d(channels[4] + channels[4], channels[3], kernel_size, stride=2, padding=padding, output_padding=1,  bias=False)
+        self.dense8 = Dense(embed_dim, channels[3])
+        self.tgnorm4 = nn.GroupNorm(4, channels[3])
+
+        # tconv4
+        self.tconv4 = nn.ConvTranspose1d(channels[3] + channels[3], channels[2], kernel_size, stride=2, padding=padding, output_padding=1,  bias=False)
+        self.dense9 = Dense(embed_dim, channels[2])
+        self.tgnorm3 = nn.GroupNorm(4, channels[2])
+
+        # tconv3
+        self.tconv3 = nn.ConvTranspose1d(channels[2] + channels[2], channels[1], kernel_size, stride=2, padding=padding, output_padding=1,  bias=False)
+        self.dense10 = Dense(embed_dim, channels[1])
+        self.tgnorm2 = nn.GroupNorm(4, channels[1])
+
+        # tconv2
+        self.tconv2 = nn.ConvTranspose1d(channels[1] + channels[1], channels[0], kernel_size, stride=2, padding=padding, output_padding=1,  bias=False)
+        self.dense11 = Dense(embed_dim, channels[0])
+        self.tgnorm1 = nn.GroupNorm(2, channels[0])
+
+        self.tconv1 = nn.Conv1d(channels[0] + channels[0], 1, kernel_size, padding=padding) 
+
+
+    def forward(self, x, tau):                           
+
+        squeeze = x.dim() == 2
+        if squeeze:
+            x = x.unsqueeze(1)                      # (B, L) -> (B, 1, L), now it has channels
+        tau = tau.reshape(-1)                           # (B,)
+        L = x.shape[-1]
+
+        # L (the number of samples of the function) must be a multiple of 8 (3 downsamplings): 
+        # pad here and crop at the end
+
+        pad = (-L) % 32
+        # if pad is not null, we need to add padding 
+        if pad:
+            x = F.pad(x, (0, pad), mode="replicate")
+
+        # create a time embedding 
+        # in order to not add it to every layer, project it trough dense, wich is learnable
+        embed = self.act(self.embed(tau))
+
+        # encoder 
+        #           conv(x(t, tau))  + embedding(tau)
+        h1 = self.act(self.gnorm1( self.conv1(x) + self.dense1(embed)))
+        h2 = self.act(self.gnorm2(self.conv2(h1) + self.dense2(embed)))
+        h3 = self.act(self.gnorm3(self.conv3(h2) + self.dense3(embed)))
+        h4 = self.act(self.gnorm4(self.conv4(h3) + self.dense4(embed)))
+        h5 = self.act(self.gnorm5(self.conv5(h4) + self.dense5(embed)))
+        h6 = self.act(self.gnorm6(self.conv6(h5) + self.dense6(embed)))
+
+        h = self.act(self.tgnorm5(self.tconv6(h6) + self.dense7(embed)))
+        h = self.act(self.tgnorm4(self.tconv5(torch.cat([h, h5], dim=1)) + self.dense8(embed)))
+        h = self.act(self.tgnorm3(self.tconv4(torch.cat([h, h4], dim=1)) + self.dense9(embed)))
+        h = self.act(self.tgnorm2(self.tconv3(torch.cat([h, h3], dim=1)) + self.dense10(embed)))
+        h = self.act(self.tgnorm1(self.tconv2(torch.cat([h, h2], dim=1)) + self.dense11(embed)))
+        h = self.tconv1(torch.cat([h, h1], dim=1))
+
+        h = h[..., :L]
+        return h.squeeze(1) if squeeze else h
