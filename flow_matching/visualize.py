@@ -30,3 +30,15 @@ def plot_evolucion(trayectoria, n=30, paneles=6):
     fig.suptitle("Evolución de la generación: del ruido a la función constante")
     plt.tight_layout()
     plt.savefig("evolucion.png", dpi=150)
+
+
+def plot_losses(losses, path="losses.png"):
+    """Training loss (CFM) of each epoch."""
+    plt.figure(figsize=(6, 4))
+    plt.plot(range(1, len(losses) + 1), losses)
+    plt.yscale("log")
+    plt.xlabel("epoch")
+    plt.ylabel("CFM loss")
+    plt.title("Training loss")
+    plt.tight_layout()
+    plt.savefig(path, dpi=150)
