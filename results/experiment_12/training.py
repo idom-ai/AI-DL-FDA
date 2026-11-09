@@ -6,6 +6,7 @@ import torch
 
 from flow_matching_fda.data import make_sinusoids
 from flow_matching_fda.train import train
+from flow_matching_fda.visualize import plot_losses
 from models.convolutionals import PropuestaPersonal
 
 # ---- Configuration ----
@@ -32,7 +33,7 @@ model = PropuestaPersonal(
 ).to(DEVICE)
 
 # ---- 2. Train (train() moves the FDataGrid to a tensor on the model's device) ----
-train(model, data, epochs=EPOCHS)
+losses = train(model, data, epochs=EPOCHS)
 
 # ---- 3. Save checkpoint: weights + everything needed to rebuild model and data ----
 torch.save({
@@ -49,3 +50,6 @@ torch.save({
 n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Checkpoint saved in {CHECKPOINT_PATH}")
 print(f"Number of trained parameters: {n_params}")
+
+# ---- 4. Loss plot (losses.png) ----
+plot_losses(losses)

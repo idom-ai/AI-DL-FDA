@@ -6,6 +6,7 @@ import torch
 
 from flow_matching_fda.data import make_sinusoids
 from flow_matching_fda.train import train
+from flow_matching_fda.visualize import plot_losses
 from models.unet_adaptation import SongsUNet1D
 
 # ---- Configuration ----
@@ -18,7 +19,7 @@ KERNEL_SIZE = 11
 EPOCHS = 1000
 SEED = 0
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
-CHECKPOINT_PATH = f"unet1d_{EPOCHS}_epochs.pt"
+CHECKPOINT_PATH = f"unet1d_{EPOCHS}_epochs_kernel_{KERNEL_SIZE}.pt"
 
 torch.manual_seed(SEED)              # model initialization and CFM noise
 
@@ -33,7 +34,7 @@ model = SongsUNet1D(
 ).to(DEVICE)
 
 # ---- 2. Train (train() moves the FDataGrid to a tensor on the model's device) ----
-train(model, data, epochs=EPOCHS)
+losses = train(model, data, epochs=EPOCHS)
 
 # ---- 3. Save checkpoint: weights + everything needed to rebuild model and data ----
 torch.save({
@@ -51,3 +52,6 @@ torch.save({
 n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Checkpoint saved in {CHECKPOINT_PATH}")
 print(f"Number of trained parameters: {n_params}")
+
+# ---- 4. Loss plot (losses_kernel_{KERNEL_SIZE}.png) ----
+plot_losses(losses, path=f"losses_kernel_{KERNEL_SIZE}.png")
