@@ -1,18 +1,14 @@
 """ENTRENAR: configura el experimento, entrena y guarda un checkpoint."""
-import os
 import torch
 
 from flow_matching.data import make_sinusoids
 from models.convolutionals import ThirdVelocityNetConvolutional
 from flow_matching.train import train
+from flow_matching.visualize import plot_losses
 
 # ---- Configuración ----
 N_SAMPLES = 2000      
 N_POINTS = 128        
-HIDDEN = 64
-N_LAYERS = 12
-KERNEL_SIZE = 15
-PADDING_MODE = "circular"
 EPOCHS = 2000
 SEED = 0
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -25,7 +21,7 @@ data = make_sinusoids(N_SAMPLES, N_POINTS).to(DEVICE)
 model = ThirdVelocityNetConvolutional(dim=N_POINTS).to(DEVICE)
 
 # ---- 2. Entrenar ----
-train(model, data, epochs=EPOCHS)
+losses = train(model, data, epochs=EPOCHS)
 
 # ---- 3. Guardar checkpoint: pesos + todo lo necesario para reconstruir modelo y datos ----
 torch.save({
@@ -37,3 +33,6 @@ torch.save({
 n_params = sum(p.numel() for p in model.parameters())
 print(f"Checkpoint guardado en {CHECKPOINT_PATH}")
 print(f"Número de parámetros entrenados: {n_params}")
+
+# ---- 4. Loss plot (losses.png) ----
+plot_losses(losses)

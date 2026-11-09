@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import torch
 
-from flow_matching.quality import plot_calidad
 from flow_matching.data import make_sinusoids
 from flow_matching.flow_matching import generate
 from models.convolutionals import SecondVelocityNetConvolutional
@@ -26,15 +25,11 @@ data = make_sinusoids(ckpt["data_args"]["n_samples"], ckpt["data_args"]["n_point
 
 # ---- 3. Generar funciones nuevas (devuelve toda la trayectoria: del ruido a las funciones) ----
 trayectoria = generate(model, N_GENERATE, ckpt["data_args"]["n_points"], steps=ODE_STEPS, device=DEVICE)
-funciones = trayectoria[-1]
 
 # ---- 4. Métricas ----
-mse = funciones.var(dim=1, unbiased=False).mean().item()   # 0 = perfectamente constantes
-print(f"MSE de constancia de lo generado: {mse:.6f}")
 print(f"Número de parámetros del modelo: {sum(p.numel() for p in model.parameters())}")
 
 # ---- 5. Gráficas ----
 plot_originals(data)
 plot_evolucion(trayectoria)
-plot_calidad(data, funciones)
 plt.show()

@@ -1,10 +1,10 @@
 """ENTRENAR: configura el experimento, entrena y guarda un checkpoint."""
-import os
 import torch
 
 from flow_matching.data import make_constants
 from models.architectures import VelocityNetPooling
 from flow_matching.train import train
+from flow_matching.visualize import plot_losses
 
 # ---- Configuración ----
 N_SAMPLES = 2000      
@@ -23,7 +23,7 @@ data = make_constants(N_SAMPLES, N_POINTS).to(DEVICE)
 model = VelocityNetPooling(dim=N_POINTS, hidden=HIDDEN, pool_size=POOL_SIZE).to(DEVICE)
 
 # ---- 2. Entrenar ----
-train(model, data, epochs=EPOCHS)
+losses = train(model, data, epochs=EPOCHS)
 
 # ---- 3. Guardar checkpoint: pesos + todo lo necesario para reconstruir modelo y datos ----
 torch.save({
@@ -35,3 +35,6 @@ torch.save({
 n_params = sum(p.numel() for p in model.parameters())
 print(f"Checkpoint guardado en {CHECKPOINT_PATH}")
 print(f"Número de parámetros entrenados: {n_params}")
+
+# ---- 4. Loss plot (losses.png) ----
+plot_losses(losses)
