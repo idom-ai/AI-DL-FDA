@@ -9,7 +9,7 @@ from flow_matching_fda.visualize import plot_evolution, plot_final_comparison, p
 from models.unet_adaptation import SongsUNet1D
 
 # ---- Configuration ----
-KERNEL_SIZES = [9, 11, 13, 23, 33, 65]      # one trained model per kernel size: unet1d_1000_epochs_kernel_{k}.pt
+KERNEL_SIZES = [9, 11, 13, 23, 33, 65, 85]      # one trained model per kernel size: unet1d_1000_epochs_kernel_{k}.pt
 N_GENERATE = 50                 # functions to generate with each model
 ODE_STEPS = 1000                # integration steps of the ODE
 NOISE_SEED = 0                  # same initial noise for every model, so that they can be compared

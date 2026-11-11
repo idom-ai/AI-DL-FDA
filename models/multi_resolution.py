@@ -37,9 +37,12 @@ class MultiResolutionUNet1D(nn.Module):
     def __init__(self, backbone, n_points, backbone_points=256, hidden_channels=32,
                  kernel_size=13, embed_dim=256, fourier_scale=30.0):
         super().__init__()
+
         n_layers = round(math.log2(n_points / backbone_points))        # stride-2 layers per side
+
         assert n_layers >= 1 and n_points == backbone_points * 2 ** n_layers, \
             f"n_points must be {backbone_points} * 2^n with n >= 1, got {n_points}"
+        
         C, k, p = hidden_channels, kernel_size, (kernel_size - 1) // 2
 
         self.backbone = backbone
